@@ -76,15 +76,21 @@ public struct Portal<Content: View>: View {
                     guard let idx = currentIndex, model.info[idx].initialized else { return }
                     guard let anchor = prefs[currentKey] else { return }
 
-                    // Set the group ID if provided
-                    if let groupID = currentGroupID {
+                    // Write only what changed. `CrossModel` is `@Observable`, and every write to
+                    // `info` invalidates every view reading it — each Portal's opacity and index
+                    // among them — whether or not the value differs. This handler runs on every
+                    // layout pass (every scroll frame), so unconditional writes re-rendered all
+                    // portals continuously. (Fleuron fork; see FLEURON-FORK.md.)
+                    if let groupID = currentGroupID, model.info[idx].groupID != groupID {
                         model.info[idx].groupID = groupID
                     }
 
                     // Keep anchors aligned with live layout so animated layer follows scrolling/dragging
                     if isSource {
-                        model.info[idx].sourceAnchor = anchor
-                    } else {
+                        if model.info[idx].sourceAnchor != anchor {
+                            model.info[idx].sourceAnchor = anchor
+                        }
+                    } else if model.info[idx].destinationAnchor != anchor {
                         model.info[idx].destinationAnchor = anchor
                     }
                 }

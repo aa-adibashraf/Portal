@@ -176,12 +176,16 @@ public struct GroupItemPortalTransitionModifier<Item: Identifiable, LayerView: V
     /// Configures portal info for all items in the group.
     private func configureGroupPortals(at indices: [Int]) {
         for (i, idx) in indices.enumerated() {
-            portalModel.info[idx].initialized = true
-            portalModel.info[idx].animation = animation
-            portalModel.info[idx].completionCriteria = completionCriteria
-            portalModel.info[idx].corners = corners
-            portalModel.info[idx].groupID = groupID
-            portalModel.info[idx].isGroupCoordinator = (i == 0)
+            // One write for the whole configuration rather than six: each write to the
+            // `@Observable` model notifies every reader. (Fleuron fork.)
+            var info = portalModel.info[idx]
+            info.initialized = true
+            info.animation = animation
+            info.completionCriteria = completionCriteria
+            info.corners = corners
+            info.groupID = groupID
+            info.isGroupCoordinator = (i == 0)
+            portalModel.info[idx] = info
 
             if let item = items.first(where: { "\($0.id)" == portalModel.info[idx].infoID }) {
                 portalModel.info[idx].layerView = AnyView(layerView(item))
