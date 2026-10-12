@@ -239,6 +239,7 @@ public struct ConditionalPortalTransitionModifier<LayerView: View>: ViewModifier
             }
         } else {
             // Reverse transition: isActive became false
+            portalModel.publishRestingAnchors(at: idx)
             portalModel.info[idx].hideView = false
 
             withAnimation(animation, completionCriteria: completionCriteria) {

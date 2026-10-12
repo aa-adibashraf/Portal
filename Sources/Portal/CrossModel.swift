@@ -28,6 +28,34 @@ public class CrossModel {
     /// Used for managing portal hierarchies and nested portal scenarios.
     public var rootInfo: [PortalInfo] = []
 
+    /// Live anchors reported by portals whose layer is not flying, kept out of `info`.
+    ///
+    /// Every write to `info` invalidates every view reading it, which is every `Portal` on screen.
+    /// A portal that has landed still reports its anchor on each layout pass, so a scrolled list of
+    /// landed portals re-rendered all of them on every frame. Nothing reads a resting portal's
+    /// anchor until its layer flies again, so the anchor waits here, unobserved, and
+    /// `publishRestingAnchors(at:)` hands it over as a reverse flight begins. (Fleuron fork; see
+    /// FLEURON-FORK.md.)
+    @ObservationIgnored public var restingAnchors: [String: RestingAnchors] = [:]
+
+    public struct RestingAnchors {
+        public var source: Anchor<CGRect>?
+        public var destination: Anchor<CGRect>?
+    }
+
+    /// Moves a portal's resting anchors into `info`, writing only what differs. Call before its
+    /// layer flies again.
+    public func publishRestingAnchors(at index: Int) {
+        guard info.indices.contains(index),
+              let resting = restingAnchors.removeValue(forKey: info[index].infoID) else { return }
+        if let source = resting.source, info[index].sourceAnchor != source {
+            info[index].sourceAnchor = source
+        }
+        if let destination = resting.destination, info[index].destinationAnchor != destination {
+            info[index].destinationAnchor = destination
+        }
+    }
+
     /// Initializes a new CrossModel instance.
     /// Creates empty arrays for managing portal information.
     public init() {}

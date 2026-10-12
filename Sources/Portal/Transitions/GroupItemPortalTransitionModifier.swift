@@ -246,6 +246,7 @@ public struct GroupItemPortalTransitionModifier<Item: Identifiable, LayerView: V
         }
 
         for idx in cleanupIndices {
+            portalModel.publishRestingAnchors(at: idx)
             portalModel.info[idx].hideView = false
         }
 

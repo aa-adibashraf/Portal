@@ -263,6 +263,7 @@ public struct OptionalPortalTransitionModifier<Item: Identifiable, LayerView: Vi
             else { return }
 
             // Prepare for reverse animation
+            portalModel.publishRestingAnchors(at: idx)
             portalModel.info[idx].hideView = false
 
             PortalLogs.logger.log(

@@ -17,3 +17,13 @@ requires a namespace on every transition, so moving to it is a separate migratio
 
 `Anchor<CGRect>` is `Equatable`, so an anchor that genuinely moved still compares unequal and is
 written: the animated layer keeps following live layout.
+
+3. **A landed portal's anchor waits outside `CrossModel.info`** (`4.2.7-fleuron.2`). After a
+   forward flight lands (`hideView` true) its layer is hidden and reads nothing, but its views
+   still report their anchors on every layout pass, and as a list scrolls those anchors really do
+   change, so change 1 alone still wrote them and re-rendered every Portal on screen each frame,
+   each one then searching `info` for its own entry. They now go into the unobserved
+   `CrossModel.restingAnchors`, and `publishRestingAnchors(at:)` moves them into `info` the
+   moment a reverse flight begins (every place that sets `hideView = false`), so the layer still
+   flies from where the view really is. Measured on an iPhone 16 Pro Max (Release, 12 Oct 2026),
+   scrolling a Library of covers that had flown in: dropped-frame time 20% -> 2.7%.

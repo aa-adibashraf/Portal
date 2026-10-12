@@ -145,6 +145,7 @@ public struct GroupIDPortalTransitionModifier<LayerView: View>: ViewModifier {
         } else {
             // Reverse transition: isActive became false
             for idx in groupIndices {
+                portalModel.publishRestingAnchors(at: idx)
                 portalModel.info[idx].hideView = false
             }
 

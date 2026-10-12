@@ -85,6 +85,16 @@ public struct Portal<Content: View>: View {
                         model.info[idx].groupID = groupID
                     }
 
+                    // A landed portal's layer is hidden and reads nothing: keep its anchor out of the
+                    // observed model until it flies again (see `CrossModel.restingAnchors`).
+                    if model.info[idx].hideView {
+                        let id = model.info[idx].infoID
+                        var resting = model.restingAnchors[id] ?? .init()
+                        if isSource { resting.source = anchor } else { resting.destination = anchor }
+                        model.restingAnchors[id] = resting
+                        return
+                    }
+
                     // Keep anchors aligned with live layout so animated layer follows scrolling/dragging
                     if isSource {
                         if model.info[idx].sourceAnchor != anchor {

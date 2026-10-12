@@ -588,6 +588,7 @@ struct PortalPrivateTransitionModifier: ViewModifier {
                     }
                 } else {
                     // Reverse transition
+                    portalModel.publishRestingAnchors(at: idx)
                     portalModel.info[idx].hideView = false
 
                     withAnimation(animation, completionCriteria: completionCriteria) {
@@ -683,6 +684,7 @@ struct PortalPrivateItemTransitionModifier<Item: Identifiable>: ViewModifier {
                         return
                     }
 
+                    portalModel.publishRestingAnchors(at: idx)
                     portalModel.info[idx].hideView = false
 
                     withAnimation(animation, completionCriteria: completionCriteria) {
@@ -783,6 +785,7 @@ struct MultiIDPortalPrivateTransitionModifier: ViewModifier {
                 } else {
                     // Reverse transition
                     for idx in groupIndices {
+                        portalModel.publishRestingAnchors(at: idx)
                         portalModel.info[idx].hideView = false
                     }
 
@@ -925,6 +928,7 @@ struct MultiItemPortalPrivateTransitionModifier<Item: Identifiable>: ViewModifie
         }
 
         for idx in cleanupIndices {
+            portalModel.publishRestingAnchors(at: idx)
             portalModel.info[idx].hideView = false
         }
 
