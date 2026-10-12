@@ -180,6 +180,7 @@ public struct GroupItemPortalTransitionModifier<Item: Identifiable, LayerView: V
             // `@Observable` model notifies every reader. (Fleuron fork.)
             var info = portalModel.info[idx]
             info.initialized = true
+            info.handoverToken = nil
             info.animation = animation
             info.completionCriteria = completionCriteria
             info.corners = corners
@@ -205,7 +206,7 @@ public struct GroupItemPortalTransitionModifier<Item: Identifiable, LayerView: V
                     portalModel.info[idx].animateView = true
                 } completion: {
                     Task { @MainActor in
-                        portalModel.info[idx].hideView = true
+                        portalModel.land(at: idx)
 
                         if portalModel.info[idx].isGroupCoordinator {
                             let lastItemDelay = TimeInterval(indices.count - 1) * staggerDelay
@@ -229,7 +230,7 @@ public struct GroupItemPortalTransitionModifier<Item: Identifiable, LayerView: V
             } completion: {
                 Task { @MainActor in
                     for idx in indices {
-                        portalModel.info[idx].hideView = true
+                        portalModel.land(at: idx)
                         if portalModel.info[idx].isGroupCoordinator {
                             portalModel.info[idx].completion(true)
                         }
@@ -257,10 +258,7 @@ public struct GroupItemPortalTransitionModifier<Item: Identifiable, LayerView: V
         } completion: {
             Task { @MainActor in
                 for idx in cleanupIndices {
-                    portalModel.info[idx].initialized = false
-                    portalModel.info[idx].layerView = nil
-                    portalModel.info[idx].sourceAnchor = nil
-                    portalModel.info[idx].destinationAnchor = nil
+                    portalModel.retire(at: idx)
                     portalModel.info[idx].groupID = nil
                     portalModel.info[idx].isGroupCoordinator = false
                     if portalModel.info[idx].isGroupCoordinator {

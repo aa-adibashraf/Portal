@@ -61,6 +61,18 @@ public struct PortalInfo: Identifiable {
     /// usually after the transition layer has completed its movement.
     public var hideView = false
 
+    /// The layer is still drawn for a moment after `hideView`, see `CrossModel.land(at:)`.
+    /// (Fleuron fork.)
+    public var layerLingers = false
+
+    /// The source shows although the layer has not been cleared yet, see
+    /// `CrossModel.retire(at:)`. (Fleuron fork.)
+    public var sourceRevealed = false
+
+    /// Ties a deferred clean-up to the flight that scheduled it; any new flight clears it.
+    /// (Fleuron fork.)
+    public var handoverToken: UUID?
+
     /// Anchor bounds information for the source (origin) view.
     ///
     /// Contains the geometric bounds of the source view in the coordinate space

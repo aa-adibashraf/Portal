@@ -56,6 +56,48 @@ public class CrossModel {
         }
     }
 
+    /// How long the layer outlives a handover. See `land(at:)`.
+    public static let layerHandover: TimeInterval = 0.034
+
+    /// A forward flight has arrived: the destination shows now, and the layer goes a moment later.
+    ///
+    /// The layer is drawn in Portal's own overlay window, which commits its frames separately from
+    /// the app's. Hidden in the same update that showed the destination, the layer could leave a
+    /// frame before the destination arrived, and for that frame neither was drawn — whatever lay
+    /// behind showed through. Kept for two frames more, the two overlap exactly instead.
+    /// (Fleuron fork; see FLEURON-FORK.md.)
+    public func land(at index: Int) {
+        guard info.indices.contains(index) else { return }
+        info[index].layerLingers = true
+        info[index].hideView = true
+        DispatchQueue.main.asyncAfter(deadline: .now() + Self.layerHandover) { [weak self] in
+            guard let self, self.info.indices.contains(index), self.info[index].hideView,
+                  self.info[index].layerLingers else { return }
+            self.info[index].layerLingers = false
+        }
+    }
+
+    /// A reverse flight has arrived home: the source shows now, and the layer and its anchors are
+    /// cleared a moment later, for the reason `land(at:)` gives. (Fleuron fork.)
+    public func retire(at index: Int) {
+        guard info.indices.contains(index) else { return }
+        let token = UUID()
+        info[index].sourceRevealed = true
+        info[index].handoverToken = token
+        DispatchQueue.main.asyncAfter(deadline: .now() + Self.layerHandover) { [weak self] in
+            guard let self, self.info.indices.contains(index),
+                  self.info[index].handoverToken == token else { return }
+            var cleared = self.info[index]
+            cleared.initialized = false
+            cleared.layerView = nil
+            cleared.sourceAnchor = nil
+            cleared.destinationAnchor = nil
+            cleared.sourceRevealed = false
+            cleared.handoverToken = nil
+            self.info[index] = cleared
+        }
+    }
+
     /// Initializes a new CrossModel instance.
     /// Creates empty arrays for managing portal information.
     public init() {}

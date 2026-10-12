@@ -27,3 +27,15 @@ written: the animated layer keeps following live layout.
    moment a reverse flight begins (every place that sets `hideView = false`), so the layer still
    flies from where the view really is. Measured on an iPhone 16 Pro Max (Release, 12 Oct 2026),
    scrolling a Library of covers that had flown in: dropped-frame time 20% -> 2.7%.
+
+4. **A layer outlives its handover by 34 ms** (`4.2.7-fleuron.3`). The layer is drawn in Portal's
+   own overlay window, which commits its frames apart from the app's window. Landing hid the
+   layer in the same update that showed the destination, and returning cleared it in the same
+   update that showed the source — but the two windows could show those changes a frame apart,
+   and for that frame neither object was drawn: on an iPhone simulator recording, the Library
+   showed through a book page as it opened, and the cell stood empty as the jacket came home.
+   `CrossModel.land(at:)` now shows the destination at once and keeps the layer (`layerLingers`)
+   for 34 ms; `retire(at:)` shows the source at once (`sourceRevealed`) and clears the layer and
+   its anchors 34 ms later, unless a new flight has started (`handoverToken`). For those frames
+   the layer and the real view draw the same picture in the same place. `PortalPrivate` is
+   unchanged.

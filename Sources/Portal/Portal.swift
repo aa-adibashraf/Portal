@@ -112,7 +112,8 @@ public struct Portal<Content: View>: View {
     private var opacity: CGFloat {
         guard let idx = index else { return 1 }
         if source {
-            return portalModel.info[idx].destinationAnchor == nil ? 1 : 0
+            let info = portalModel.info[idx]
+            return info.destinationAnchor == nil || info.sourceRevealed ? 1 : 0
         } else {
             return portalModel.info[idx].initialized ? (portalModel.info[idx].hideView ? 1 : 0) : 1
         }

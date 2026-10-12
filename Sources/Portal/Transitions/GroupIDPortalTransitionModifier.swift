@@ -110,6 +110,7 @@ public struct GroupIDPortalTransitionModifier<LayerView: View>: ViewModifier {
             for (i, idx) in groupIndices.enumerated() {
                 let portalID = portalModel.info[idx].infoID
                 portalModel.info[idx].initialized = true
+                portalModel.info[idx].handoverToken = nil
                 portalModel.info[idx].animation = animation
                 portalModel.info[idx].completionCriteria = completionCriteria
                 portalModel.info[idx].corners = corners
@@ -134,7 +135,7 @@ public struct GroupIDPortalTransitionModifier<LayerView: View>: ViewModifier {
                 } completion: {
                     Task { @MainActor in
                         for idx in groupIndices {
-                            portalModel.info[idx].hideView = true
+                            portalModel.land(at: idx)
                             if portalModel.info[idx].isGroupCoordinator {
                                 portalModel.info[idx].completion(true)
                             }
@@ -156,10 +157,7 @@ public struct GroupIDPortalTransitionModifier<LayerView: View>: ViewModifier {
             } completion: {
                 Task { @MainActor in
                     for idx in groupIndices {
-                        portalModel.info[idx].initialized = false
-                        portalModel.info[idx].layerView = nil
-                        portalModel.info[idx].sourceAnchor = nil
-                        portalModel.info[idx].destinationAnchor = nil
+                        portalModel.retire(at: idx)
                         portalModel.info[idx].groupID = nil
                         portalModel.info[idx].isGroupCoordinator = false
                         if portalModel.info[idx].isGroupCoordinator {

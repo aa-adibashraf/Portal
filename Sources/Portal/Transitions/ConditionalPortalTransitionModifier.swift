@@ -218,6 +218,7 @@ public struct ConditionalPortalTransitionModifier<LayerView: View>: ViewModifier
 
         // Configure portal info for any transition
         portalModel.info[idx].initialized = true
+        portalModel.info[idx].handoverToken = nil
         portalModel.info[idx].animation = animation
         portalModel.info[idx].completionCriteria = completionCriteria
         portalModel.info[idx].corners = corners
@@ -232,7 +233,7 @@ public struct ConditionalPortalTransitionModifier<LayerView: View>: ViewModifier
                 } completion: {
                     Task { @MainActor in
                         // Hide destination view and notify completion
-                        portalModel.info[idx].hideView = true
+                        portalModel.land(at: idx)
                         portalModel.info[idx].completion(true)
                     }
                 }
@@ -247,10 +248,7 @@ public struct ConditionalPortalTransitionModifier<LayerView: View>: ViewModifier
             } completion: {
                 Task { @MainActor in
                     // Complete cleanup after reverse animation
-                    portalModel.info[idx].initialized = false
-                    portalModel.info[idx].layerView = nil
-                    portalModel.info[idx].sourceAnchor = nil
-                    portalModel.info[idx].destinationAnchor = nil
+                    portalModel.retire(at: idx)
                     portalModel.info[idx].completion(false)
                 }
             }
