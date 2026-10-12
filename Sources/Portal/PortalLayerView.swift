@@ -46,6 +46,7 @@ internal struct PortalLayerView: View {
         @Bindable var model = portalModel
         ForEach($model.info) { $info in
             PortalLayerContentView(proxy: proxy, info: $info)
+                .zIndex(info.layerOrder)
         }
     }
 }

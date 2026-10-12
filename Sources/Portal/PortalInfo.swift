@@ -137,6 +137,11 @@ public struct PortalInfo: Identifiable {
     /// and completion callbacks for the group.
     public var isGroupCoordinator = false
 
+    /// Where this portal's layer is drawn among the others: higher draws over lower. A group sets
+    /// it from each item's place in its array, so the layers stack as the caller ordered them in
+    /// both directions, however long ago each portal was first registered. (Fleuron fork.)
+    public var layerOrder: Double = 0
+
     /// Initializes a new PortalInfo instance with the specified identifier.
     ///
     /// Creates a new portal data record with default values for all properties

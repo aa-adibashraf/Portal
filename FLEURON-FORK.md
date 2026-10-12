@@ -39,3 +39,12 @@ written: the animated layer keeps following live layout.
    its anchors 34 ms later, unless a new flight has started (`handoverToken`). For those frames
    the layer and the real view draw the same picture in the same place. `PortalPrivate` is
    unchanged.
+
+5. **A group's layers stack in the order the caller gave them** (`4.2.7-fleuron.4`). Layers were
+   drawn in `CrossModel.info`'s order, which is the order each portal was first registered — the
+   first time it ever flew, not this flight. A caller that sorted its items for stacking (Fleuron's
+   Home fan, middle book in front) got that order only on a first flight; afterwards, whenever the
+   fan's order differed from the order its books were first seen, the returning covers overlapped
+   wrongly and then snapped into place when the real views took over. `PortalInfo.layerOrder` is
+   now set from each item's index in the group on every flight, and `PortalLayerView` draws each
+   layer at that `zIndex`. Single portals keep 0, as before.

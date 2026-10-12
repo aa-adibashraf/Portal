@@ -186,6 +186,10 @@ public struct GroupItemPortalTransitionModifier<Item: Identifiable, LayerView: V
             info.corners = corners
             info.groupID = groupID
             info.isGroupCoordinator = (i == 0)
+            // The layers stack in the order the caller gave the items, not the order their
+            // entries were first appended to `info`. (Fleuron fork.)
+            info.layerOrder = items.firstIndex(where: { "\($0.id)" == info.infoID })
+                .map(Double.init) ?? 0
             portalModel.info[idx] = info
 
             if let item = items.first(where: { "\($0.id)" == portalModel.info[idx].infoID }) {
