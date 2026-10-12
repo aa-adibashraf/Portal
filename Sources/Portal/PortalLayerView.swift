@@ -51,6 +51,35 @@ internal struct PortalLayerView: View {
     }
 }
 
+/// Where a layer stands between its source and its destination: the animation moves `progress`
+/// alone, and the frame is worked out from both ends' **current** rectangles on every frame.
+///
+/// The layer used to animate its frame and offset to whichever end it was flying to. An end that
+/// moved during the flight — a source inside a view that is itself still animating back into
+/// place, its anchor arriving afresh on each layout — was then applied to the offset unanimated,
+/// on top of the spring already carrying it: the spring pulled one way and each new anchor
+/// stepped it the other, and the flying object shook. Interpolated here instead, a moving end
+/// moves the layer by its share of the remaining way, smoothly. (Fleuron fork; see FLEURON-FORK.md.)
+private struct PortalLayerPlacement: ViewModifier, Animatable {
+    var progress: CGFloat
+    let from: CGRect
+    let to: CGRect
+
+    nonisolated var animatableData: CGFloat {
+        get { progress }
+        set { progress = newValue }
+    }
+
+    func body(content: Content) -> some View {
+        let t = progress
+        content
+            .frame(width: from.width + (to.width - from.width) * t,
+                   height: from.height + (to.height - from.height) * t)
+            .offset(x: from.minX + (to.minX - from.minX) * t,
+                    y: from.minY + (to.minY - from.minY) * t)
+    }
+}
+
 /// Individual portal layer content view that handles a single portal animation.
 ///
 /// This view is responsible for rendering one specific portal transition, including:
@@ -104,13 +133,6 @@ private struct PortalLayerContentView: View {
             let dRect = proxy[destination]
             let animate = info.animateView
 
-            // Interpolate size between source and destination based on animation state
-            let width = animate ? dRect.size.width : sRect.size.width
-            let height = animate ? dRect.size.height : sRect.size.height
-
-            // Interpolate position between source and destination based on animation state
-            let x = animate ? dRect.minX : sRect.minX
-            let y = animate ? dRect.minY : sRect.minY
 
             // Only apply clipShape if corners are configured
             Group {
@@ -133,8 +155,7 @@ private struct PortalLayerContentView: View {
                     #endif
                 }
             )
-            .frame(width: width, height: height)
-            .offset(x: x, y: y)
+            .modifier(PortalLayerPlacement(progress: animate ? 1 : 0, from: sRect, to: dRect))
             .transition(.identity)  // Prevents additional SwiftUI transitions
         }
     }

@@ -72,7 +72,13 @@ public struct Portal<Content: View>: View {
             )
             .anchorPreference(key: AnchorKey.self, value: .bounds, transform: anchorPreferenceTransform)
             .onPreferenceChange(AnchorKey.self) { prefs in
-                Task { @MainActor in
+                // **In the same update, not on a `Task`.** The hop delivered each new anchor one
+                // run-loop turn after the layout that measured it, so a flight whose end was
+                // itself still moving (a fan easing back into place under a scaling Home) took
+                // its animation tick on one frame and its new anchor on the next: the layer
+                // stepped forward on a stale target, then back as the target caught up, and every
+                // flying object zigzagged on its way home. (Fleuron fork; see FLEURON-FORK.md.)
+                MainActor.assumeIsolated {
                     guard let idx = currentIndex, model.info[idx].initialized else { return }
                     guard let anchor = prefs[currentKey] else { return }
 

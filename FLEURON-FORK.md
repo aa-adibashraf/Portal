@@ -48,3 +48,18 @@ written: the animated layer keeps following live layout.
    wrongly and then snapped into place when the real views took over. `PortalInfo.layerOrder` is
    now set from each item's index in the group on every flight, and `PortalLayerView` draws each
    layer at that `zIndex`. Single portals keep 0, as before.
+
+6. **A flight whose end is still moving follows it without zigzagging** (`4.2.7-fleuron.4`).
+   Fleuron's Home flies its fan objects home while Home itself is still scaling back into place,
+   so the end each object flies to moves on every frame. Two things made the objects shake against
+   it, measured frame by frame from inside the app:
+   - `Portal`'s anchor handler applied each new anchor on a `Task`, one run-loop turn after the
+     layout that measured it. The animation's tick and the new anchor therefore arrived on
+     alternate frames: the layer stepped on toward a stale target, then back as the target caught
+     up — a direction change on almost every frame. The handler now applies it in the same update
+     (`MainActor.assumeIsolated`).
+   - The layer animated its frame and offset to a fixed end; an end that moved was applied to that
+     offset unanimated, on top of the spring. The layer now animates one `progress` value
+     (`PortalLayerPlacement`) and works its frame out from both ends' current rectangles, so a
+     moving end moves it by its share of the remaining way.
+   After both, each object's per-frame path changes direction one to three times in a whole flight.
