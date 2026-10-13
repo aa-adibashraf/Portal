@@ -63,3 +63,13 @@ written: the animated layer keeps following live layout.
      (`PortalLayerPlacement`) and works its frame out from both ends' current rectangles, so a
      moving end moves it by its share of the remaining way.
    After both, each object's per-frame path changes direction one to three times in a whole flight.
+7. **Only the end being flown to is followed; the end left behind holds still** (`4.2.7-fleuron.5`).
+   Change 6 followed *both* ends live, and going forward the end left behind moves too: as a
+   Fleuron page opens, Home zooms in towards its card, carrying the fan the objects leave up and
+   to the left (measured: from (37, 292) to (−161, 235) during the flight). Early in the flight,
+   while the layer is still close to that end, it was pulled off with it before it turned for
+   its place — a visible swerve. `PortalLayerContentView` now keeps the departing end's rectangle
+   from the moment `animateView` changes (the source going forward, the destination coming back),
+   tagged with its direction so the first frame of a flight back never reads the flight out's.
+   The end being flown to is still followed live, so change 6's smooth return is untouched; on
+   Fleuron's close the destination never moved, so freezing it there changes nothing.

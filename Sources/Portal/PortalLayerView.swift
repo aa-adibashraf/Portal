@@ -102,6 +102,14 @@ private struct PortalLayerContentView: View {
 
     @Environment(\.portalDebugOverlays) private var debugOverlaysEnabled
 
+    /// The end the layer is leaving, as it stood when the flight set off: the source going
+    /// forward, the destination coming back. Only the end being flown **to** is followed live —
+    /// an end left behind can keep moving (a source under a camera that zooms in as the page
+    /// opens), and following it pulled the layer off along with it before it turned for home.
+    /// Kept with the direction it was taken for, so the first frame of a flight back never reads
+    /// the end left behind by the flight out. (Fleuron fork; see FLEURON-FORK.md.)
+    @State private var departure: (forward: Bool, rect: CGRect)?
+
     /// Builds the animated layer view that transitions between source and destination.
     ///
     /// This computed property creates the visual layer that users see during the portal
@@ -132,7 +140,7 @@ private struct PortalLayerContentView: View {
             let sRect = proxy[source]
             let dRect = proxy[destination]
             let animate = info.animateView
-
+            let left = departure.flatMap { $0.forward == animate ? $0.rect : nil }
 
             // Only apply clipShape if corners are configured
             Group {
@@ -155,8 +163,13 @@ private struct PortalLayerContentView: View {
                     #endif
                 }
             )
-            .modifier(PortalLayerPlacement(progress: animate ? 1 : 0, from: sRect, to: dRect))
+            .modifier(PortalLayerPlacement(progress: animate ? 1 : 0,
+                                           from: animate ? (left ?? sRect) : sRect,
+                                           to: animate ? dRect : (left ?? dRect)))
             .transition(.identity)  // Prevents additional SwiftUI transitions
+            .onChange(of: animate) { _, forward in
+                departure = (forward, forward ? sRect : dRect)
+            }
         }
     }
 }
